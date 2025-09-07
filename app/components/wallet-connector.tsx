@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "./ui/button";
+import { Button } from "../components/ui/button";
 import { Wallet, CheckCircle, AlertCircle } from "lucide-react";
 
 interface WalletConnectorProps {
