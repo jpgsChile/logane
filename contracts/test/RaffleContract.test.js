@@ -88,25 +88,25 @@ describe("RaffleContract", () => {
       )
     })
 
-    it("Should allow users to join raffle", async () => {
+    it("Se ha unido al sorteo", async () => {
       const ticketPrice = ethers.utils.parseEther("0.01")
 
       await expect(raffleContract.connect(user1).joinRaffle(1, { value: ticketPrice })).to.emit(
         raffleContract,
-        "ParticipantJoined",
+        "ParticipanteAgregado",
       )
 
       const participantCount = await raffleContract.getParticipantCount(1)
       expect(participantCount).to.equal(1)
     })
 
-    it("Should not allow duplicate participation", async () => {
+    it("No se permite la participación duplicada", async () => {
       const ticketPrice = ethers.utils.parseEther("0.01")
 
       await raffleContract.connect(user1).joinRaffle(1, { value: ticketPrice })
 
       await expect(raffleContract.connect(user1).joinRaffle(1, { value: ticketPrice })).to.be.revertedWith(
-        "Already participated",
+        "Ya esta participando",
       )
     })
   })

@@ -1,0 +1,18 @@
+{
+  "functions": {
+    "app/api/og/route.tsx": {
+      "maxDuration": 10
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/frame",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/html"
+        }
+      ]
+    }
+  ]
+}

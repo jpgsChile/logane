@@ -2,7 +2,7 @@
 
 ## 🚀 La Plataforma Disruptiva de Premios en Farcaster
 
-Logane revoluciona el concepto tradicional de premios y sorteos, transformándolos en un sistema transparente, descentralizado y beneficioso que convierte el reparto tradicional en un fondo a beneficio con transparencia y sellado descentralizado. Construida como una Mini App nativa para Farcaster en BASE blockchain, Logane elimina la opacidad y desconfianza de los sorteos tradicionales mediante smart contracts auditables y transparencia total.
+Construida como una Mini App nativa para Farcaster en BASE blockchain, Logane elimina la opacidad y desconfianza de los sorteos tradicionales mediante smart contracts auditables y transparencia total.
 
 ### ✨ Propuesta de Valor Disruptiva
 
@@ -53,7 +53,7 @@ Logane revoluciona el concepto tradicional de premios y sorteos, transformándol
 
 ### 1. Clonar el Repositorio
 \`\`\`bash
-git clone https://github.com/logane-team/logane.git
+git clone https://github.com/jpgsChile/logane
 cd logane
 \`\`\`
 
@@ -153,6 +153,33 @@ El archivo `.well-known/farcaster.json` configura la integración con Farcaster:
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
+## 🧪 Testing y Desarrollo
+
+### Configuración Rápida para Testnet
+```bash
+# 1. Instalar dependencias
+npm install
+
+# 2. Desplegar a BASE Sepolia
+npm run deploy:testnet
+
+# 3. Iniciar la MiniApp
+npm run dev
+
+# 4. Abrir http://localhost:3000/lo-gane
+```
+
+### Scripts Disponibles
+- `npm run deploy:testnet` - Desplegar contrato a BASE Sepolia
+- `npm run test:contract` - Ejecutar tests del smart contract
+- `npm run test:miniapp` - Test automatizado de la MiniApp
+- `npm run compile` - Compilar contratos
+
+### Documentación de Testing
+- 📖 [Guía Completa de Testing](./GUIA_TESTING.md)
+- 🚰 [Información del Faucet](./FAUCET_INFO.md)
+- 🔧 [Mejoras Implementadas](./MEJORAS_IMPLEMENTADAS.md)
 
 ## 🆘 Soporte
 

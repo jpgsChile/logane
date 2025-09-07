@@ -1,0 +1,11 @@
+{
+  "chainId": "0x14A34",
+  "chainName": "BASE Sepolia",
+  "rpcUrls": ["https://sepolia.base.org"],
+  "nativeCurrency": {
+    "name": "Ethereum",
+    "symbol": "ETH",
+    "decimals": 18
+  },
+  "blockExplorerUrls": ["https://sepolia.basescan.org"]
+}
