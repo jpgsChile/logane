@@ -2,12 +2,18 @@
 
 import type React from "react"
 import { useState } from "react"
-import { PaymentToken, SUPPORTED_TOKENS } from "@/lib/types"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import type { CreateRaffleRequest, Prize } from "@/lib/types" // Declare CreateRaffleRequest and Prize
+import { PaymentToken, SUPPORTED_TOKENS } from "../../lib/types"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
+import { Label } from "./ui/label"
+import type { CreateRaffleRequest, Prize } from "../../lib/types"
+import { useWallet } from "../../hooks/use-wallet"
 
-const CreateRaffleDialog: React.FC = () => {
+interface CreateRaffleDialogProps {
+  onClose: () => void
+  onSuccess: () => void
+}
+
+const CreateRaffleDialog: React.FC<CreateRaffleDialogProps> = ({ onClose, onSuccess }) => {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [prizeCount, setPrizeCount] = useState(3)
@@ -20,6 +26,27 @@ const CreateRaffleDialog: React.FC = () => {
   const [maxParticipants, setMaxParticipants] = useState("")
   const [duration, setDuration] = useState("")
   const [paymentToken, setPaymentToken] = useState<PaymentToken>(PaymentToken.ETH)
+  const [isCreating, setIsCreating] = useState(false)
+
+  const {
+    address: walletAddress,
+    isConnected,
+    isCorrectNetwork,
+    hasBalance,
+    connectWallet,
+    getFaucetETH,
+    formatAddress,
+    isHydrated
+  } = useWallet()
+
+  // Debug logs
+  console.log('CreateRaffleDialog - Wallet State:', {
+    isHydrated,
+    isConnected,
+    walletAddress,
+    isCorrectNetwork,
+    hasBalance
+  })
 
   const handlePrizeCountChange = (count: number) => {
     setPrizeCount(count)
@@ -38,6 +65,22 @@ const CreateRaffleDialog: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Validaciones de wallet
+    if (!isConnected) {
+      alert("Debes conectar tu wallet primero")
+      return
+    }
+
+    if (!isCorrectNetwork) {
+      alert("Debes estar conectado a BASE Sepolia testnet")
+      return
+    }
+
+    if (!hasBalance) {
+      alert("No tienes ETH suficiente. Usa el faucet para obtener ETH de testnet")
+      return
+    }
+    
     // Validación básica
     if (!title.trim() || !description.trim()) {
       alert("Por favor completa todos los campos obligatorios")
@@ -48,27 +91,152 @@ const CreateRaffleDialog: React.FC = () => {
       alert("Debe haber entre 1 y 9 premios")
       return
     }
+
+    // Validar que todos los premios tengan nombre (imagen puede ir vacía)
+    const validPrizes = prizes.slice(0, prizeCount)
+    if (validPrizes.some(prize => !prize.name.trim())) {
+      alert("Todos los premios deben tener un nombre")
+      return
+    }
     
     if (Number.parseInt(maxParticipants) <= prizeCount) {
       alert("Debe haber al menos 1 participante más que premios")
       return
     }
 
+    if (ticketPrice <= 0) {
+      alert("El precio del ticket debe ser mayor a 0")
+      return
+    }
+
+    if (Number.parseInt(duration) < 1) {
+      alert("La duración debe ser al menos 1 día")
+      return
+    }
+
+    setIsCreating(true)
+
     const raffleData: CreateRaffleRequest = {
       title,
       description,
-      prizes: prizes.slice(0, prizeCount),
+      // Normalizamos los premios: si imageUrl está vacío, enviamos string vacío explícito
+      prizes: prizes.slice(0, prizeCount).map((p) => ({
+        name: p.name.trim(),
+        description: p.description?.trim() || "",
+        imageUrl: p.imageUrl?.trim() || "",
+        value: p.value || 0,
+      })),
+      prizeCount,
       ticketPrice,
       maxParticipants: Number.parseInt(maxParticipants),
       duration: Number.parseInt(duration) * 24 * 60 * 60,
       paymentToken,
     }
     
-    console.log("Datos de la rifa:", raffleData)
+    try {
+      // Importar el servicio de blockchain dinámicamente para evitar problemas de SSR
+      const { blockchainService } = await import("../../lib/blockchain")
+      
+      const result = await blockchainService.createRaffle({
+        ...raffleData,
+        creator: walletAddress || undefined
+      })
+      
+      if (result.success) {
+        alert(`¡Rifa creada exitosamente! ID: ${result.raffleId}`)
+        onSuccess()
+        onClose()
+      } else {
+        alert(`Error al crear la rifa: ${result.error}`)
+      }
+    } catch (error) {
+      console.error("Error creating raffle:", error)
+      alert("Error al crear la rifa. Intenta de nuevo.")
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Crear Nueva Rifa</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ×
+          </button>
+        </div>
+        
+        {/* Estado de la wallet */}
+        {!isHydrated ? (
+          <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="text-gray-600">⏳</div>
+              <h3 className="font-medium text-gray-800">Inicializando...</h3>
+            </div>
+            <p className="text-sm text-gray-700 mb-3">
+              Cargando información de wallet
+            </p>
+            <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+          </div>
+        ) : !isConnected ? (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="text-yellow-600">⚠️</div>
+              <h3 className="font-medium text-yellow-800">Wallet no conectada</h3>
+            </div>
+            <p className="text-sm text-yellow-700 mb-3">
+              Necesitas conectar tu wallet para crear una rifa
+            </p>
+            <button
+              type="button"
+              onClick={connectWallet}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-md hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+            >
+              Conectar Wallet
+            </button>
+          </div>
+        ) : (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="text-green-600">✅</div>
+              <h3 className="font-medium text-green-800">Wallet Conectada</h3>
+            </div>
+            <p className="text-sm text-green-700 mb-2">
+              {formatAddress(walletAddress!)} - BASE Sepolia
+            </p>
+            {!isCorrectNetwork && (
+              <p className="text-sm text-yellow-700">
+                ⚠️ Cambia a BASE Sepolia testnet
+              </p>
+            )}
+            {isCorrectNetwork && !hasBalance && (
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-blue-700">
+                  💧 Obtén ETH de testnet
+                </p>
+                <button
+                  type="button"
+                  onClick={getFaucetETH}
+                  className="text-xs text-blue-600 underline hover:text-blue-800"
+                >
+                  Usar Faucet
+                </button>
+              </div>
+            )}
+            {isCorrectNetwork && hasBalance && (
+              <p className="text-sm text-green-700">
+                🎉 ¡Listo para crear rifas!
+              </p>
+            )}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
       {/* Título y Descripción */}
       <div className="space-y-4">
         <div className="space-y-2">
@@ -102,7 +270,7 @@ const CreateRaffleDialog: React.FC = () => {
         <Label htmlFor="prizeCount">Número de Premios (1-9)</Label>
         <Select
           value={prizeCount.toString()}
-          onValueChange={(value) => handlePrizeCountChange(Number.parseInt(value))}
+          onValueChange={(value: string) => handlePrizeCountChange(Number.parseInt(value))}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecciona número de premios" />
@@ -223,7 +391,7 @@ const CreateRaffleDialog: React.FC = () => {
           <Label htmlFor="paymentToken">Token de Pago</Label>
           <Select
             value={paymentToken.toString()}
-            onValueChange={(value) => setPaymentToken(Number.parseInt(value) as PaymentToken)}
+            onValueChange={(value: string) => setPaymentToken(Number.parseInt(value) as PaymentToken)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecciona el token de pago" />
@@ -244,13 +412,29 @@ const CreateRaffleDialog: React.FC = () => {
         </div>
       </div>
 
-      <button
-        type="submit"
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-      >
-        Crear Rifa
-      </button>
-    </form>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isCreating || !isHydrated || !isConnected || !isCorrectNetwork || !hasBalance}
+              className={`flex-1 py-2 px-4 rounded-md transition-all duration-200 ${
+                isCreating || !isHydrated || !isConnected || !isCorrectNetwork || !hasBalance
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
+              }`}
+            >
+              {isCreating ? 'Creando Rifa...' : 'Crear Rifa'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   )
 }
 

@@ -35,10 +35,14 @@ export interface CreateRaffleRequest {
   title: string;
   description: string;
   prizes: Prize[];
+  // Número real de premios usados (<= 9)
+  prizeCount?: number;
   ticketPrice: number;
   maxParticipants: number;
   duration: number; // en segundos
   paymentToken: PaymentToken;
+  // Dirección del creador (para modo simulación/local)
+  creator?: string;
 }
 
 export interface RaffleResponse {
@@ -76,7 +80,7 @@ export const SUPPORTED_TOKENS = {
 export interface BlockchainService {
   getRaffle(id: number): Promise<Raffle | null>;
   getActiveRaffles(): Promise<Raffle[]>;
-  getUserRaffles(address: string): Promise<number[]>;
+  getUserRaffles(address: string): Promise<Raffle[]>;
   createRaffle(data: CreateRaffleRequest): Promise<{ success: boolean; raffleId?: number; error?: string }>;
   joinRaffle(raffleId: number, participantAddress: string): Promise<{ success: boolean; error?: string }>;
   drawWinners(raffleId: number): Promise<{ success: boolean; error?: string }>;

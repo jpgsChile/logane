@@ -1,127 +1,163 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { blockchainService } from "../../lib/blockchain"
+import type { Raffle } from "../../lib/types"
+import { PaymentToken } from "../../lib/types"
+import CreateRaffleDialog from "../components/create-raffle-dialog"
+import RaffleCard from "../components/raffle-card"
+import { useWallet } from "../../hooks/use-wallet"
 
 export default function LoGaneApp() {
-  const [walletAddress, setWalletAddress] = useState<string>("")
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [error, setError] = useState("")
+  const {
+    address: walletAddress,
+    isConnected,
+    isConnecting,
+    error: walletError,
+    balance,
+    connectWallet,
+    disconnectWallet,
+    getFaucetETH,
+    formatAddress,
+    isCorrectNetwork,
+    hasBalance,
+    isMetaMaskInstalled,
+    isHydrated
+  } = useWallet()
+  
+  const [raffles, setRaffles] = useState<Raffle[]>([])
+  const [userRaffles, setUserRaffles] = useState<Raffle[]>([])
+  const [loading, setLoading] = useState(false)
+  const [loadingUserRaffles, setLoadingUserRaffles] = useState(false)
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [activeTab, setActiveTab] = useState<'active' | 'my-raffles'>('active')
 
-  const connectWallet = async () => {
-    if (typeof window.ethereum === "undefined") {
-      setError("MetaMask no está instalado. Por favor instala MetaMask para continuar.")
+  // Función para manejar la conexión de wallet
+  const handleConnectWallet = async () => {
+    await connectWallet()
+  }
+
+  // Función para manejar el faucet
+  const handleGetFaucet = async () => {
+    await getFaucetETH()
+  }
+
+  // Abrir diálogo de crear rifa solo si la wallet está conectada y en condiciones
+  const openCreateDialog = () => {
+    if (!isHydrated) return
+    if (!isConnected) {
+      alert("Conecta tu wallet para crear una rifa")
+      return
+    }
+    if (!isCorrectNetwork) {
+      alert("Cambia a BASE Sepolia testnet para crear una rifa")
+      return
+    }
+    if (!hasBalance) {
+      alert("No tienes ETH suficiente. Usa el faucet para obtener ETH de testnet")
+      return
+    }
+    setShowCreateDialog(true)
+  }
+
+  // Cargar rifas activas
+  const loadRaffles = async () => {
+    setLoading(true)
+    try {
+      const activeRaffles = await blockchainService.getActiveRaffles()
+      setRaffles(activeRaffles)
+    } catch (error) {
+      console.error("Error loading raffles:", error)
+      alert("Error al cargar las rifas")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Cargar rifas del usuario (solo cuando se necesite)
+  const loadUserRaffles = async () => {
+    if (!walletAddress) return
+    
+    setLoadingUserRaffles(true)
+    try {
+      const userRafflesData = await blockchainService.getUserRaffles(walletAddress)
+      setUserRaffles(userRafflesData)
+    } catch (error) {
+      console.error("Error loading user raffles:", error)
+      alert("Error al cargar tus rifas")
+    } finally {
+      setLoadingUserRaffles(false)
+    }
+  }
+
+  // Participar en una rifa
+  const participateInRaffle = async (raffleId: number) => {
+    if (!walletAddress) {
+      alert("Debes conectar tu wallet primero")
       return
     }
 
-    setIsConnecting(true)
-    setError("")
-
-    try {
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      })
-
-      if (accounts.length > 0) {
-        const address = accounts[0]
-        setWalletAddress(address)
-        await checkNetwork()
-      }
-    } catch (error: any) {
-      console.error("Error connecting wallet:", error)
-      if (error.code === 4001) {
-        setError("Conexión cancelada por el usuario")
-      } else {
-        setError("Error al conectar la wallet. Intenta de nuevo.")
-      }
-    } finally {
-      setIsConnecting(false)
+    if (!isCorrectNetwork) {
+      alert("Debes estar conectado a BASE Sepolia testnet")
+      return
     }
-  }
 
-  const checkNetwork = async () => {
+    if (!hasBalance) {
+      alert("No tienes ETH suficiente. Usa el faucet para obtener ETH de testnet")
+      return
+    }
+
     try {
-      const chainId = await window.ethereum.request({ method: "eth_chainId" })
-      const baseSepoliaChainId = "0x14a34" // 84532 en decimal
-
-      if (chainId !== baseSepoliaChainId) {
-        try {
-          await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: baseSepoliaChainId }],
-          })
-        } catch (switchError: any) {
-          if (switchError.code === 4902) {
-            await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [
-                {
-                  chainId: baseSepoliaChainId,
-                  chainName: "BASE Sepolia",
-                  nativeCurrency: {
-                    name: "Ethereum",
-                    symbol: "ETH",
-                    decimals: 18,
-                  },
-                  rpcUrls: ["https://sepolia.base.org"],
-                  blockExplorerUrls: ["https://sepolia.basescan.org"],
-                },
-              ],
-            })
-          }
-        }
+      const result = await blockchainService.joinRaffle(raffleId, walletAddress)
+      if (result.success) {
+        // Recargar rifas para actualizar el contador de participantes
+        await loadRaffles()
+        alert("¡Te has unido a la rifa exitosamente!")
+      } else {
+        alert(result.error || "Error al participar en la rifa")
       }
     } catch (error) {
-      console.error("Error checking network:", error)
+      console.error("Error participating in raffle:", error)
+      alert("Error al participar en la rifa")
     }
   }
 
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`
+  // Función para cambiar de pestaña y cargar datos si es necesario
+  const handleTabChange = (tab: 'active' | 'my-raffles') => {
+    setActiveTab(tab)
+    if (tab === 'active' && raffles.length === 0 && !loading) {
+      loadRaffles()
+    }
+    if (tab === 'my-raffles' && userRaffles.length === 0 && !loadingUserRaffles) {
+      loadUserRaffles()
+    }
   }
 
-  const mockRaffles = [
-    {
-      id: 1,
-      title: "Rifa iPhone 15 Pro",
-      description: "Gana el último iPhone 15 Pro",
-      prizeCount: 3,
-      ticketPrice: "0.01",
-      maxParticipants: 100,
-      participants: 45,
-      endTime: Date.now() + 86400000,
-      isActive: true,
-      prizes: [
-        { name: "iPhone 15 Pro", value: "0.5" },
-        { name: "AirPods Pro", value: "0.2" },
-        { name: "Gift Card $100", value: "0.1" }
-      ]
-    },
-    {
-      id: 2,
-      title: "Rifa Gaming Setup",
-      description: "Setup completo para gaming",
-      prizeCount: 2,
-      ticketPrice: "0.02",
-      maxParticipants: 50,
-      participants: 23,
-      endTime: Date.now() + 172800000,
-      isActive: true,
-      prizes: [
-        { name: "PC Gaming", value: "1.0" },
-        { name: "Monitor 4K", value: "0.3" }
-      ]
+  // Cerrar el diálogo si la wallet se desconecta
+  useEffect(() => {
+    if (!isConnected && showCreateDialog) {
+      setShowCreateDialog(false)
     }
-  ]
+  }, [isConnected, showCreateDialog])
+
+  // Función para formatear el precio del ticket
+  const formatTicketPrice = (price: number, paymentToken: PaymentToken) => {
+    const { ethers } = require("ethers")
+    const formattedPrice = ethers.formatEther(price.toString())
+    const tokenSymbol = paymentToken === PaymentToken.ETH ? "ETH" : 
+                      paymentToken === PaymentToken.USDT ? "USDT" : "USDC"
+    return `${formattedPrice} ${tokenSymbol}`
+  }
 
   const formatTimeRemaining = (endTime: number) => {
-    const now = Date.now()
+    const now = Math.floor(Date.now() / 1000) // Convertir a segundos
     const diff = endTime - now
     
     if (diff <= 0) return "Finalizada"
     
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    const days = Math.floor(diff / (24 * 60 * 60))
+    const hours = Math.floor((diff % (24 * 60 * 60)) / (60 * 60))
+    const minutes = Math.floor((diff % (60 * 60)) / 60)
     
     if (days > 0) return `${days}d ${hours}h`
     if (hours > 0) return `${hours}h ${minutes}m`
@@ -129,13 +165,20 @@ export default function LoGaneApp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            🏆 Lo Gane
-          </h1>
+          <div className="flex justify-center items-center gap-4 mb-4">
+            <img 
+              src="/logo.png" 
+              alt="Lo Gane Logo" 
+              className="w-16 h-16 object-contain"
+            />
+            <h1 className="text-4xl font-bold text-gray-900">
+              Lo Gane
+            </h1>
+          </div>
           <p className="text-lg text-gray-600">
             Rifas Descentralizadas Transparentes en BASE
           </p>
@@ -143,7 +186,38 @@ export default function LoGaneApp() {
 
         {/* Wallet Connection */}
         <div className="flex justify-center mb-8">
-          {!walletAddress ? (
+          {!isHydrated ? (
+            <div className="text-center">
+              <div className="p-6 bg-white rounded-lg shadow-lg border">
+                <div className="text-4xl mb-4">⏳</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Cargando...
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Inicializando aplicación
+                </p>
+                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+              </div>
+            </div>
+          ) : walletError ? (
+            <div className="text-center">
+              <div className="p-6 bg-red-50 rounded-lg shadow-lg border border-red-200">
+                <div className="text-4xl mb-4">⚠️</div>
+                <h3 className="text-lg font-semibold text-red-900 mb-2">
+                  Error de Conexión
+                </h3>
+                <p className="text-sm text-red-700 mb-4">
+                  {walletError}
+                </p>
+                <button
+                  onClick={handleConnectWallet}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-md hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+                >
+                  Reintentar Conexión
+                </button>
+              </div>
+            </div>
+          ) : !isConnected ? (
             <div className="text-center">
               <div className="p-6 bg-white rounded-lg shadow-lg border">
                 <div className="text-4xl mb-4">🔗</div>
@@ -154,20 +228,36 @@ export default function LoGaneApp() {
                   Conecta tu wallet MetaMask para crear y participar en rifas
                 </p>
                 
-                {error && (
+                {walletError && (
                   <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg">
                     <div className="text-red-600">⚠️</div>
-                    <p className="text-sm text-red-700">{error}</p>
+                    <p className="text-sm text-red-700">{walletError}</p>
                   </div>
                 )}
 
-                <button
-                  onClick={connectWallet}
-                  disabled={isConnecting}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isConnecting ? "Conectando..." : "Conectar MetaMask"}
-                </button>
+                {!isMetaMaskInstalled ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-red-600 mb-3">
+                      MetaMask no está instalado
+                    </p>
+                    <a
+                      href="https://metamask.io/download/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition-colors"
+                    >
+                      Instalar MetaMask
+                    </a>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleConnectWallet}
+                    disabled={isConnecting}
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-md hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  >
+                    {isConnecting ? "Conectando..." : "Conectar MetaMask"}
+                  </button>
+                )}
 
                 <div className="mt-4 text-xs text-gray-500">
                   <p>Red: BASE Sepolia Testnet</p>
@@ -176,95 +266,171 @@ export default function LoGaneApp() {
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="text-green-600">✅</div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-green-800">Wallet Conectada</p>
-                <p className="text-xs text-green-600">{formatAddress(walletAddress)}</p>
+            <div className="w-full max-w-md">
+              <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg mb-3">
+                <div className="text-green-600">✅</div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-green-800">Wallet Conectada</p>
+                  <p className="text-xs text-green-600">{formatAddress(walletAddress!)}</p>
+                  {balance && (
+                    <p className="text-xs text-green-600">Balance: {balance} ETH</p>
+                  )}
+                </div>
+                <button
+                  onClick={disconnectWallet}
+                  className="text-green-700 border border-green-300 px-3 py-1 rounded text-sm hover:bg-green-100"
+                >
+                  Desconectar
+                </button>
               </div>
-              <button
-                onClick={() => setWalletAddress("")}
-                className="text-green-700 border border-green-300 px-3 py-1 rounded text-sm hover:bg-green-100"
-              >
-                Desconectar
-              </button>
+
+              {/* Estado de la red y balance */}
+              <div className="space-y-2">
+                {!isCorrectNetwork && (
+                  <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="text-yellow-600">⚠️</div>
+                    <p className="text-sm text-yellow-700">Cambia a BASE Sepolia testnet</p>
+                  </div>
+                )}
+
+                {isCorrectNetwork && !hasBalance && (
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="text-blue-600">💧</div>
+                    <div className="flex-1">
+                      <p className="text-sm text-blue-700">Obtén ETH de testnet</p>
+                      <button
+                        onClick={handleGetFaucet}
+                        className="text-xs text-blue-600 underline hover:text-blue-800"
+                      >
+                        Usar Faucet
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {isCorrectNetwork && hasBalance && (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="text-green-600">🎉</div>
+                    <p className="text-sm text-green-700">¡Listo para participar en rifas!</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
 
-        {walletAddress && (
+        {isHydrated && (
           <div className="space-y-6">
             {/* Tabs */}
             <div className="flex justify-center">
               <div className="bg-white rounded-lg p-1 shadow-sm">
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium">
+                <button 
+                  onClick={() => handleTabChange('active')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    activeTab === 'active'
+                      ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
                   Rifas Activas
                 </button>
-                <button className="px-4 py-2 text-gray-600 hover:text-gray-900 text-sm font-medium ml-1">
+                <button 
+                  onClick={() => isConnected && handleTabChange('my-raffles')}
+                  disabled={!isConnected}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    activeTab === 'my-raffles'
+                      ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  } ${!isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title={isConnected ? '' : 'Conecta tu wallet para ver tus rifas'}
+                >
                   Mis Rifas
                 </button>
-                <button className="px-4 py-2 text-gray-600 hover:text-gray-900 text-sm font-medium ml-1">
+                <button 
+                  onClick={openCreateDialog}
+                  disabled={!isConnected}
+                  className={`px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md text-sm font-medium transition-all duration-200 ${!isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title={isConnected ? '' : 'Conecta tu wallet para crear una rifa'}
+                >
                   Crear Rifa
                 </button>
               </div>
             </div>
 
-            {/* Rifas Activas */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {mockRaffles.map((raffle) => (
-                <div key={raffle.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{raffle.title}</h3>
-                      <p className="text-gray-600 text-sm">{raffle.description}</p>
-                    </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      raffle.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {raffle.isActive ? 'Activa' : 'Finalizada'}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-yellow-500">🏆</span>
-                      <span>{raffle.prizeCount} premios</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-blue-500">👥</span>
-                      <span>{raffle.participants}/{raffle.maxParticipants}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-green-500">⏰</span>
-                      <span>{formatTimeRemaining(raffle.endTime)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-purple-500">💰</span>
-                      <span>{raffle.ticketPrice} ETH</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    <h4 className="font-medium text-sm text-gray-900">Premios:</h4>
-                    {raffle.prizes.slice(0, raffle.prizeCount).map((prize: any, index: number) => (
-                      <div key={index} className="flex justify-between text-sm">
-                        <span className="text-gray-600">{prize.name}</span>
-                        <span className="font-medium text-gray-900">{prize.value} ETH</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
-                      Participar
-                    </button>
-                    <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50">
-                      Ver Detalles
-                    </button>
-                  </div>
+            {/* Contenido de las pestañas */}
+            {activeTab === 'active' ? (
+              /* Rifas Activas */
+              loading ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                  <p className="mt-2 text-gray-600">Cargando rifas activas...</p>
                 </div>
-              ))}
-            </div>
+              ) : raffles.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">🎯</div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {loading ? 'Cargando...' : 'Ver Rifas Activas'}
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    {loading ? 'Buscando rifas disponibles...' : 'Haz clic para ver las rifas activas disponibles'}
+                  </p>
+                  {!loading && (
+                    <button 
+                      onClick={() => loadRaffles()}
+                      className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-md hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+                    >
+                      Cargar Rifas Activas
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {raffles.map((raffle) => (
+                    <RaffleCard
+                      key={raffle.id}
+                      raffle={raffle}
+                      onParticipate={loadRaffles}
+                    />
+                  ))}
+                </div>
+              )
+            ) : (
+              /* Mis Rifas */
+              !isConnected ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">🔒</div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Conecta tu wallet</h3>
+                  <p className="text-gray-600 mb-4">Conecta tu wallet para ver y administrar tus rifas</p>
+                </div>
+              ) : loadingUserRaffles ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                  <p className="mt-2 text-gray-600">Cargando tus rifas...</p>
+                </div>
+              ) : userRaffles.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">📝</div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No has creado rifas</h3>
+                  <p className="text-gray-600 mb-4">Crea tu primera rifa y compártela con la comunidad</p>
+                  <button 
+                    onClick={openCreateDialog}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-md hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+                  >
+                    Crear Mi Primera Rifa
+                  </button>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {userRaffles.map((raffle) => (
+                    <RaffleCard
+                      key={raffle.id}
+                      raffle={raffle}
+                      onParticipate={loadRaffles}
+                    />
+                  ))}
+                </div>
+              )
+            )}
 
             {/* Crear Rifa */}
             <div className="bg-white rounded-lg shadow-md p-6">
@@ -274,60 +440,43 @@ export default function LoGaneApp() {
               </p>
               
               <div className="text-center py-8">
-                <h4 className="text-lg font-semibold mb-4">Funcionalidad en Desarrollo</h4>
-                <p className="text-gray-600 mb-6">
-                  La funcionalidad completa de crear rifas estará disponible próximamente
-                </p>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
+                    <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
                     <span className="text-sm">Define hasta 9 premios únicos</span>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
+                  <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
+                    <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
                     <span className="text-sm">Establece precio de entrada y participantes</span>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
+                  <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
+                    <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
                     <span className="text-sm">La blockchain selecciona ganadores automáticamente</span>
                   </div>
                 </div>
                 <button 
-                  className="mt-6 bg-gray-400 text-white px-6 py-2 rounded-md text-sm font-medium cursor-not-allowed"
-                  disabled
+                  onClick={openCreateDialog}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-md text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
                 >
-                  Crear Rifa (Próximamente)
+                  Crear Rifa
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {!walletAddress && (
-          <div className="text-center py-12">
-            <div className="max-w-md mx-auto">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Conecta tu Wallet para Comenzar
-              </h2>
-              <p className="text-gray-600 mb-6">
-                Necesitas conectar tu wallet MetaMask a BASE Sepolia para crear y participar en rifas
-              </p>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                  <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
-                  <span className="text-sm">Instala MetaMask si no lo tienes</span>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                  <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
-                  <span className="text-sm">Conecta a BASE Sepolia testnet</span>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                  <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
-                  <span className="text-sm">Obtén ETH de testnet desde el faucet</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Diálogo de Crear Rifa */}
+        {showCreateDialog && isHydrated && isConnected && (
+          <CreateRaffleDialog 
+            onClose={() => setShowCreateDialog(false)}
+            onSuccess={() => {
+              setShowCreateDialog(false)
+              // Recargar rifas activas y cambiar a la pestaña de mis rifas
+              loadRaffles()
+              loadUserRaffles()
+              setActiveTab('my-raffles')
+            }}
+          />
         )}
       </div>
     </div>

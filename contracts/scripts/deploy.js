@@ -6,11 +6,25 @@ async function main() {
   console.log("Deploying RaffleContract to BASE Sepolia...")
   console.log("Network:", network.name, "Chain ID:", network.chainId)
 
-  // tomar la fábrica del contrato
+  // Signer y fábrica del contrato
+  const [deployer] = await ethers.getSigners()
+  console.log("Deployer:", await deployer.getAddress())
   const RaffleContract = await ethers.getContractFactory("RaffleContract")
 
-  // deployar el contrato
-  const feeRecipient = process.env.FEE_RECIPIENT || "0x742d35Cc6634C0532925a3b8D4C9db96590c6C87"
+  // Determinar feeRecipient (validar checksum o usar deployer)
+  let feeRecipient = process.env.FEE_RECIPIENT
+  if (!feeRecipient) {
+    feeRecipient = await deployer.getAddress()
+  } else {
+    try {
+      // Normaliza checksum en ethers v5
+      const utils = require("ethers").utils
+      feeRecipient = utils.getAddress(feeRecipient)
+    } catch (e) {
+      console.warn("FEE_RECIPIENT inválido, usando deployer:", e.message)
+      feeRecipient = await deployer.getAddress()
+    }
+  }
   console.log("Deploying with fee recipient:", feeRecipient)
   
   const raffleContract = await RaffleContract.deploy(feeRecipient)

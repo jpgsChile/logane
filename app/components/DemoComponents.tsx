@@ -104,24 +104,32 @@ export const Icon: React.FC<IconProps> = ({ name, size = 'md', className = '' })
 
 interface HomeProps {
   setActiveTab: (tab: string) => void;
+  isConnected?: boolean;
 }
 
-export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
+export const Home: React.FC<HomeProps> = ({ setActiveTab, isConnected = false }) => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          ¡Lo Gane! 🎉
-        </h1>
+        <div className="flex justify-center items-center gap-3 mb-4">
+          <img 
+            src="/logo.png" 
+            alt="Lo Gane Logo" 
+            className="w-8 h-8 object-contain"
+          />
+          <h1 className="text-2xl font-bold text-gray-900">
+            Lo Gane
+          </h1>
+        </div>
         <p className="text-gray-600 mb-6">
-          Participa en rifas emocionantes y gana premios increíbles
+          Rifas Descentralizadas Transparentes en BASE
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <Button
           variant="primary"
-          className="flex flex-col items-center p-6 h-24"
+          className="flex flex-col items-center p-6 h-24 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
           onClick={() => setActiveTab('features')}
         >
           <Icon name="gift" size="lg" className="mb-2" />
@@ -130,17 +138,38 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
         
         <Button
           variant="secondary"
-          className="flex flex-col items-center p-6 h-24"
-          onClick={() => window.open('/lo-gane', '_blank')}
+          className={`flex flex-col items-center p-6 h-24 ${
+            isConnected 
+              ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 hover:from-purple-200 hover:to-blue-200 border border-purple-200'
+              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+          }`}
+          onClick={() => isConnected && window.open('/lo-gane', '_blank')}
+          disabled={!isConnected}
         >
           <Icon name="trophy" size="lg" className="mb-2" />
-          <span className="text-sm font-medium">Crear Rifa</span>
+          <span className="text-sm font-medium">
+            {isConnected ? 'Crear Rifa' : 'Conecta Wallet'}
+          </span>
         </Button>
       </div>
 
-      <div className="bg-blue-50 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-900 mb-2">¿Cómo funciona?</h3>
-        <ul className="text-sm text-blue-800 space-y-1">
+      {!isConnected && (
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200">
+          <h3 className="font-semibold text-yellow-900 mb-2">⚠️ Conecta tu Wallet</h3>
+          <p className="text-sm text-yellow-800 mb-3">
+            Necesitas conectar tu wallet MetaMask para crear y participar en rifas
+          </p>
+          <div className="text-xs text-yellow-700 space-y-1">
+            <div>• Instala MetaMask si no lo tienes</div>
+            <div>• Conecta a BASE Sepolia testnet</div>
+            <div>• Obtén ETH de testnet desde el faucet</div>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-100">
+        <h3 className="font-semibold text-purple-900 mb-2">¿Cómo funciona?</h3>
+        <ul className="text-sm text-purple-800 space-y-1">
           <li>• Crea o participa en rifas</li>
           <li>• Gana premios únicos</li>
           <li>• Todo en la blockchain</li>
@@ -161,6 +190,7 @@ export const Features: React.FC<FeaturesProps> = ({ setActiveTab }) => {
         <Button
           variant="ghost"
           onClick={() => setActiveTab('home')}
+          className="text-purple-700 hover:bg-purple-50"
         >
           <Icon name="home" size="sm" className="mr-2" />
           Inicio
@@ -171,24 +201,24 @@ export const Features: React.FC<FeaturesProps> = ({ setActiveTab }) => {
         <h2 className="text-xl font-bold text-gray-900">Características</h2>
         
         <div className="space-y-3">
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <Icon name="gift" className="text-blue-600" />
+          <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100">
+            <Icon name="gift" className="text-purple-600" />
             <div>
               <h3 className="font-medium text-gray-900">Hasta 9 Premios</h3>
               <p className="text-sm text-gray-600">Crea rifas con múltiples premios</p>
             </div>
           </div>
           
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <Icon name="users" className="text-green-600" />
+          <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100">
+            <Icon name="users" className="text-blue-600" />
             <div>
               <h3 className="font-medium text-gray-900">Participación Justa</h3>
               <p className="text-sm text-gray-600">Algoritmo transparente de selección</p>
             </div>
           </div>
           
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <Icon name="trophy" className="text-yellow-600" />
+          <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100">
+            <Icon name="trophy" className="text-purple-600" />
             <div>
               <h3 className="font-medium text-gray-900">Blockchain Segura</h3>
               <p className="text-sm text-gray-600">Todo verificado en la red</p>

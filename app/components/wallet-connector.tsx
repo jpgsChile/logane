@@ -1,139 +1,118 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { Wallet, CheckCircle, AlertCircle } from "lucide-react";
+import { useWallet } from "../../hooks/use-wallet";
 
 interface WalletConnectorProps {
   onWalletConnected: (address: string) => void;
 }
 
 export default function WalletConnector({ onWalletConnected }: WalletConnectorProps) {
-  const [isConnected, setIsConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState("");
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState("");
+  const {
+    address: walletAddress,
+    isConnected,
+    isConnecting,
+    error: walletError,
+    balance,
+    connectWallet,
+    disconnectWallet,
+    getFaucetETH,
+    formatAddress,
+    isCorrectNetwork,
+    hasBalance,
+    isMetaMaskInstalled,
+    isHydrated
+  } = useWallet();
 
+  // Notificar al componente padre cuando cambie el estado de conexión
   useEffect(() => {
-    // Verificar si ya hay una wallet conectada
-    checkWalletConnection();
-  }, []);
-
-  const checkWalletConnection = async () => {
-    if (typeof window.ethereum !== "undefined") {
-      try {
-        const accounts = await window.ethereum.request({ method: "eth_accounts" });
-        if (accounts.length > 0) {
-          setWalletAddress(accounts[0]);
-          setIsConnected(true);
-          onWalletConnected(accounts[0]);
-        }
-      } catch (error) {
-        console.error("Error checking wallet connection:", error);
-      }
+    if (isConnected && walletAddress) {
+      onWalletConnected(walletAddress);
+    } else if (!isConnected) {
+      onWalletConnected("");
     }
+  }, [isConnected, walletAddress, onWalletConnected]);
+
+  const handleConnectWallet = async () => {
+    await connectWallet();
   };
 
-  const connectWallet = async () => {
-    if (typeof window.ethereum === "undefined") {
-      setError("MetaMask no está instalado. Por favor instala MetaMask para continuar.");
-      return;
-    }
-
-    setIsConnecting(true);
-    setError("");
-
-    try {
-      // Solicitar conexión a la wallet
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-
-      if (accounts.length > 0) {
-        const address = accounts[0];
-        setWalletAddress(address);
-        setIsConnected(true);
-        onWalletConnected(address);
-
-        // Verificar si estamos en la red correcta (BASE Sepolia)
-        await checkNetwork();
-      }
-    } catch (error: any) {
-      console.error("Error connecting wallet:", error);
-      if (error.code === 4001) {
-        setError("Conexión cancelada por el usuario");
-      } else {
-        setError("Error al conectar la wallet. Intenta de nuevo.");
-      }
-    } finally {
-      setIsConnecting(false);
-    }
+  const handleGetFaucet = async () => {
+    await getFaucetETH();
   };
 
-  const checkNetwork = async () => {
-    try {
-      const chainId = await window.ethereum.request({ method: "eth_chainId" });
-      const baseSepoliaChainId = "0x14a34"; // 84532 en decimal
-
-      if (chainId !== baseSepoliaChainId) {
-        try {
-          await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: baseSepoliaChainId }],
-          });
-        } catch (switchError: any) {
-          // Si la red no existe, la agregamos
-          if (switchError.code === 4902) {
-            await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [
-                {
-                  chainId: baseSepoliaChainId,
-                  chainName: "BASE Sepolia",
-                  nativeCurrency: {
-                    name: "Ethereum",
-                    symbol: "ETH",
-                    decimals: 18,
-                  },
-                  rpcUrls: ["https://sepolia.base.org"],
-                  blockExplorerUrls: ["https://sepolia.basescan.org"],
-                },
-              ],
-            });
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error checking network:", error);
-    }
-  };
-
-  const disconnectWallet = () => {
-    setWalletAddress("");
-    setIsConnected(false);
-    onWalletConnected("");
-  };
-
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
+  if (!isHydrated) {
+    return (
+      <div className="text-center">
+        <div className="p-6 bg-white rounded-lg shadow-lg border">
+          <div className="text-4xl mb-4">⏳</div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Cargando...
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Inicializando wallet
+          </p>
+          <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (isConnected) {
     return (
-      <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-        <CheckCircle className="h-5 w-5 text-green-600" />
-        <div className="flex-1">
-          <p className="text-sm font-medium text-green-800">Wallet Conectada</p>
-          <p className="text-xs text-green-600">{formatAddress(walletAddress)}</p>
+      <div className="w-full max-w-md">
+        <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg mb-3">
+          <CheckCircle className="h-5 w-5 text-green-600" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-green-800">Wallet Conectada</p>
+            <p className="text-xs text-green-600">{formatAddress(walletAddress!)}</p>
+            {balance && (
+              <p className="text-xs text-green-600">Balance: {balance} ETH</p>
+            )}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={disconnectWallet}
+            className="text-green-700 border-green-300 hover:bg-green-100"
+          >
+            Desconectar
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={disconnectWallet}
-          className="text-green-700 border-green-300 hover:bg-green-100"
-        >
-          Desconectar
-        </Button>
+
+        {/* Estado de la red y balance */}
+        <div className="space-y-2">
+          {!isCorrectNetwork && (
+            <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <p className="text-sm text-yellow-700">Cambia a BASE Sepolia testnet</p>
+            </div>
+          )}
+
+          {isCorrectNetwork && !hasBalance && (
+            <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="text-blue-600">💧</div>
+              <div className="flex-1">
+                <p className="text-sm text-blue-700">Obtén ETH de testnet</p>
+                <button
+                  onClick={handleGetFaucet}
+                  className="text-xs text-blue-600 underline hover:text-blue-800"
+                >
+                  Usar Faucet
+                </button>
+              </div>
+            </div>
+          )}
+
+          {isCorrectNetwork && hasBalance && (
+            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="text-green-600">🎉</div>
+              <p className="text-sm text-green-700">¡Listo para participar en rifas!</p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -149,20 +128,36 @@ export default function WalletConnector({ onWalletConnected }: WalletConnectorPr
           Conecta tu wallet MetaMask para crear y participar en rifas
         </p>
         
-        {error && (
+        {walletError && (
           <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg">
             <AlertCircle className="h-4 w-4 text-red-600" />
-            <p className="text-sm text-red-700">{error}</p>
+            <p className="text-sm text-red-700">{walletError}</p>
           </div>
         )}
 
-        <Button
-          onClick={connectWallet}
-          disabled={isConnecting}
-          className="w-full"
-        >
-          {isConnecting ? "Conectando..." : "Conectar MetaMask"}
-        </Button>
+        {!isMetaMaskInstalled ? (
+          <div className="space-y-3">
+            <p className="text-sm text-red-600 mb-3">
+              MetaMask no está instalado
+            </p>
+            <a
+              href="https://metamask.io/download/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition-colors"
+            >
+              Instalar MetaMask
+            </a>
+          </div>
+        ) : (
+          <Button
+            onClick={handleConnectWallet}
+            disabled={isConnecting}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+          >
+            {isConnecting ? "Conectando..." : "Conectar MetaMask"}
+          </Button>
+        )}
 
         <div className="mt-4 text-xs text-gray-500">
           <p>Red: BASE Sepolia Testnet</p>
