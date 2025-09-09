@@ -33,6 +33,7 @@ export default function DebugInfo({ onClose }: DebugInfoProps) {
           chainId: null as string | null,
           networkVersion: null as string | null,
           isConnected: false,
+          error: null as string | null,
         },
         timestamp: new Date().toISOString()
       }
