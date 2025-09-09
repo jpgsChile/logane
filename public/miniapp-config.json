@@ -1,5 +1,5 @@
 {
-  "farcaster_miniapp": {
+  "miniapp": {
     "name": "Lo Gane",
     "version": "1.0.0",
     "description": "Rifas Descentralizadas Transparentes en BASE",
@@ -11,15 +11,7 @@
       "title": "Lo Gane",
       "subtitle": "Rifas Descentralizadas",
       "description": "Conectando con BASE Sepolia...",
-      "duration": 3000,
-      "animation": "fadeIn",
-      "logo": "🏆",
-      "loading_text": "Cargando aplicación...",
-      "progress_bar": true,
-      "show_contract": true,
-      "show_network": true,
-      "contract": "0x6c593Ca0081b80e2bb447E080C0b8Cff4c76F8F4",
-      "network": "BASE Sepolia"
+      "duration": 3000
     },
     "frame": {
       "url": "https://v0-rifa-pps-mini-app-development.vercel.app/api/frame",
