@@ -1,43 +1,88 @@
-function withValidProperties(
-  properties: Record<string, undefined | string | string[]>,
-) {
-  return Object.fromEntries(
-    Object.entries(properties).filter(([key, value]) => {
-      if (Array.isArray(value)) {
-        return value.length > 0;
-      }
-      return !!value;
-    }),
-  );
-}
+import { NextResponse } from 'next/server'
 
 export async function GET() {
-  const URL = process.env.NEXT_PUBLIC_URL;
-
-  return Response.json({
-    accountAssociation: {
-      header: process.env.FARCASTER_HEADER,
-      payload: process.env.FARCASTER_PAYLOAD,
-      signature: process.env.FARCASTER_SIGNATURE,
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://v0-rifa-pps-mini-app-development.vercel.app'
+  
+  const farcasterConfig = {
+    "name": "Lo Gane",
+    "version": "1.0.0",
+    "description": "Rifas Descentralizadas Transparentes en BASE",
+    "icon": "/icon-192.svg",
+    "splash": {
+      "background_color": "#667eea",
+      "theme_color": "#764ba2",
+      "image": "/api/og",
+      "title": "Lo Gane",
+      "subtitle": "Rifas Descentralizadas",
+      "description": "Conectando con BASE Sepolia...",
+      "duration": 3000
     },
-    frame: withValidProperties({
-      version: "1",
-      name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
-      subtitle: process.env.NEXT_PUBLIC_APP_SUBTITLE,
-      description: process.env.NEXT_PUBLIC_APP_DESCRIPTION,
-      screenshotUrls: [],
-      iconUrl: process.env.NEXT_PUBLIC_APP_ICON,
-      splashImageUrl: process.env.NEXT_PUBLIC_APP_SPLASH_IMAGE,
-      splashBackgroundColor: process.env.NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR,
-      homeUrl: URL,
-      webhookUrl: `${URL}/api/webhook`,
-      primaryCategory: process.env.NEXT_PUBLIC_APP_PRIMARY_CATEGORY,
-      tags: [],
-      heroImageUrl: process.env.NEXT_PUBLIC_APP_HERO_IMAGE,
-      tagline: process.env.NEXT_PUBLIC_APP_TAGLINE,
-      ogTitle: process.env.NEXT_PUBLIC_APP_OG_TITLE,
-      ogDescription: process.env.NEXT_PUBLIC_APP_OG_DESCRIPTION,
-      ogImageUrl: process.env.NEXT_PUBLIC_APP_OG_IMAGE,
-    }),
-  });
+    "frame": {
+      "url": "/api/frame",
+      "image": "/api/og",
+      "buttons": [
+        {
+          "content": "🎲 Ver Rifas",
+          "action": "post"
+        },
+        {
+          "content": "🏆 Crear Rifa",
+          "action": "link",
+          "target": "/lo-gane"
+        },
+        {
+          "content": "📱 Abrir MiniApp",
+          "action": "link",
+          "target": "/lo-gane"
+        }
+      ]
+    },
+    "miniapp": {
+      "url": "/lo-gane",
+      "name": "Lo Gane",
+      "description": "Participa en rifas transparentes en BASE. Hasta 9 premios únicos.",
+      "icon": "/icon-192.svg",
+      "splash_image": "/api/og",
+      "splash_background_color": "#667eea",
+      "theme_color": "#764ba2"
+    },
+    "blockchain": {
+      "network": "BASE Sepolia",
+      "chain_id": 84532,
+      "contract_address": "0x6c593Ca0081b80e2bb447E080C0b8Cff4c76F8F4",
+      "rpc_url": "https://sepolia.base.org",
+      "explorer": "https://sepolia.basescan.org"
+    },
+    "features": [
+      "Crear rifas con hasta 9 premios",
+      "Participar en rifas activas",
+      "Selección transparente de ganadores",
+      "Soporte para ETH, USDT, USDC",
+      "Interfaz responsive",
+      "Integración con MetaMask"
+    ],
+    "requirements": {
+      "wallet": "MetaMask",
+      "network": "BASE Sepolia",
+      "tokens": ["ETH", "USDT", "USDC"]
+    },
+    "metadata": {
+      "title": "Lo Gane - Rifas Descentralizadas",
+      "description": "Participa en rifas transparentes en BASE. Hasta 9 premios únicos. ¡Conecta tu wallet y gana!",
+      "keywords": ["rifas", "blockchain", "BASE", "descentralizado", "premios", "transparente"],
+      "image": "/api/og",
+      "url": "/lo-gane",
+      "type": "website",
+      "site_name": "Lo Gane"
+    }
+  }
+
+  return new NextResponse(JSON.stringify(farcasterConfig, null, 2), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  })
 }

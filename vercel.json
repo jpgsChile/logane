@@ -32,6 +32,10 @@
     {
       "source": "/farcaster.json",
       "destination": "/api/farcaster-config"
+    },
+    {
+      "source": "/.well-known/farcaster.json",
+      "destination": "/api/farcaster-config"
     }
   ]
 }
