@@ -49,7 +49,8 @@ export default function DebugInfo({ onClose }: DebugInfoProps) {
             accounts,
             chainId,
             networkVersion,
-            isConnected: accounts && accounts.length > 0
+            isConnected: accounts && accounts.length > 0,
+            error: null
           }
         } catch (error) {
           info.wallet.error = (error as Error).message
