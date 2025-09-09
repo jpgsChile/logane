@@ -9,13 +9,12 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status") // 'active', 'ended', 'all'
 
     if (userAddress) {
-      // Get user's raffles
-      const userRaffleIds = await blockchainService.getUserRaffles(userAddress)
-      const userRaffles = await Promise.all(userRaffleIds.map((id) => blockchainService.getRaffle(id)))
+      // Get user's raffles (now returns Raffle[] directly)
+      const userRaffles = await blockchainService.getUserRaffles(userAddress)
 
       const response: RaffleResponse = {
         success: true,
-        data: userRaffles.filter((raffle) => raffle !== null),
+        data: userRaffles,
       }
       return NextResponse.json(response)
     }

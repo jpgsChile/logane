@@ -144,7 +144,6 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab, isConnected = false })
               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
           }`}
           onClick={() => isConnected && window.open('/lo-gane', '_blank')}
-          disabled={!isConnected}
         >
           <Icon name="trophy" size="lg" className="mb-2" />
           <span className="text-sm font-medium">

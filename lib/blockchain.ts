@@ -545,6 +545,21 @@ class BlockchainServiceImpl implements BlockchainService {
     };
   }
 
+  async hasUserParticipated(raffleId: number, userAddress: string): Promise<boolean> {
+    if (this.isContractDeployed && this.contract) {
+      try {
+        const hasParticipated = await (this.contract as any).hasParticipated(raffleId, userAddress);
+        return Boolean(hasParticipated);
+      } catch (error) {
+        console.error("Error checking participation:", error);
+        return false;
+      }
+    }
+    
+    // Simulación para desarrollo
+    return false;
+  }
+
   async claimPrize(raffleId: number, prizeIndex: number, winnerAddress: string): Promise<{ success: boolean; error?: string }> {
     if (this.isContractDeployed && this.contract) {
       try {

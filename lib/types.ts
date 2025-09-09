@@ -85,4 +85,5 @@ export interface BlockchainService {
   joinRaffle(raffleId: number, participantAddress: string): Promise<{ success: boolean; error?: string }>;
   drawWinners(raffleId: number): Promise<{ success: boolean; error?: string }>;
   claimPrize(raffleId: number, prizeIndex: number, winnerAddress: string): Promise<{ success: boolean; error?: string }>;
+  hasUserParticipated(raffleId: number, userAddress: string): Promise<boolean>;
 }
