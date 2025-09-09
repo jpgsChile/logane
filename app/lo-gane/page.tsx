@@ -6,6 +6,7 @@ import type { Raffle } from "../../lib/types"
 import { PaymentToken } from "../../lib/types"
 import CreateRaffleDialog from "../components/create-raffle-dialog"
 import RaffleCard from "../components/raffle-card"
+import SplashScreen from "../components/splash-screen"
 import { useWallet } from "../../hooks/use-wallet"
 
 export default function LoGaneApp() {
@@ -31,6 +32,7 @@ export default function LoGaneApp() {
   const [loadingUserRaffles, setLoadingUserRaffles] = useState(false)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [activeTab, setActiveTab] = useState<'active' | 'my-raffles'>('active')
+  const [showSplash, setShowSplash] = useState(true)
 
   // Función para manejar la conexión de wallet
   const handleConnectWallet = async () => {
@@ -166,6 +168,11 @@ export default function LoGaneApp() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      {/* Splash Screen */}
+      {showSplash && (
+        <SplashScreen onFinish={() => setShowSplash(false)} />
+      )}
+      
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">

@@ -1,0 +1,23 @@
+{
+  "background_color": "#667eea",
+  "theme_color": "#764ba2",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/lo-gane",
+  "scope": "/",
+  "name": "Lo Gane - Rifas Descentralizadas",
+  "short_name": "Lo Gane",
+  "description": "Participa en rifas transparentes en BASE. Hasta 9 premios únicos.",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "splash": {
+    "background_color": "#667eea",
+    "theme_color": "#764ba2",
+    "image": "/api/og",
+    "title": "Lo Gane - Rifas Descentralizadas",
+    "description": "Participa en rifas transparentes en BASE. Hasta 9 premios únicos.",
+    "url": "/lo-gane"
+  },
+  "frame": {
+    "version": "vNext",
+    "image": "/api/og",
+    "buttons": [
+      {
+        "content": "🎲 Ver Rifas",
+        "action": "post"
+      },
+      {
+        "content": "🏆 Crear Rifa",
+        "action": "link",
+        "target": "/lo-gane"
+      },
+      {
+        "content": "📱 Abrir MiniApp",
+        "action": "link",
+        "target": "/lo-gane"
+      }
+    ]
+  },
+  "metadata": {
+    "title": "Lo Gane - Rifas Descentralizadas",
+    "description": "Participa en rifas transparentes en BASE. Hasta 9 premios únicos. ¡Conecta tu wallet y gana!",
+    "image": "/api/og",
+    "url": "/lo-gane",
+    "contract": "0x6c593Ca0081b80e2bb447E080C0b8Cff4c76F8F4",
+    "network": "BASE Sepolia"
+  }
+}
