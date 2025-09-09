@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Button } from "./ui/button";
 import { Wallet, CheckCircle, AlertCircle } from "lucide-react";
 import { useWallet } from "../../hooks/use-wallet";
+import NetworkConfig from "./network-config";
 
 interface WalletConnectorProps {
   onWalletConnected: (address: string) => void;
@@ -85,10 +86,10 @@ export default function WalletConnector({ onWalletConnected }: WalletConnectorPr
         {/* Estado de la red y balance */}
         <div className="space-y-2">
           {!isCorrectNetwork && (
-            <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-yellow-600" />
-              <p className="text-sm text-yellow-700">Cambia a BASE Sepolia testnet</p>
-            </div>
+            <NetworkConfig onNetworkConfigured={() => {
+              // Recargar la página para actualizar el estado de la red
+              window.location.reload();
+            }} />
           )}
 
           {isCorrectNetwork && !hasBalance && (
