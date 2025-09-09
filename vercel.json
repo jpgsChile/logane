@@ -13,6 +13,25 @@
           "value": "text/html"
         }
       ]
+    },
+    {
+      "source": "/farcaster.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/farcaster.json",
+      "destination": "/api/farcaster-config"
     }
   ]
 }
