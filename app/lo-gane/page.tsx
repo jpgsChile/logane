@@ -7,6 +7,7 @@ import { PaymentToken } from "../../lib/types"
 import CreateRaffleDialog from "../components/create-raffle-dialog"
 import RaffleCard from "../components/raffle-card"
 import SplashScreen from "../components/splash-screen"
+import DebugInfo from "../components/debug-info"
 import { useWallet } from "../../hooks/use-wallet"
 
 export default function LoGaneApp() {
@@ -33,6 +34,7 @@ export default function LoGaneApp() {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [activeTab, setActiveTab] = useState<'active' | 'my-raffles'>('active')
   const [showSplash, setShowSplash] = useState(true)
+  const [showDebug, setShowDebug] = useState(false)
 
   // Función para manejar la conexión de wallet
   const handleConnectWallet = async () => {
@@ -189,6 +191,18 @@ export default function LoGaneApp() {
           <p className="text-lg text-gray-600">
             Rifas Descentralizadas Transparentes en BASE
           </p>
+          
+          {/* Debug button for production issues */}
+          {process.env.NODE_ENV === 'production' && (
+            <div className="mt-4">
+              <button
+                onClick={() => setShowDebug(true)}
+                className="text-xs text-gray-500 hover:text-gray-700 underline"
+              >
+                🔍 Debug Info
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Wallet Connection */}
@@ -484,6 +498,11 @@ export default function LoGaneApp() {
               setActiveTab('my-raffles')
             }}
           />
+        )}
+
+        {/* Debug Info Modal */}
+        {showDebug && (
+          <DebugInfo onClose={() => setShowDebug(false)} />
         )}
       </div>
     </div>

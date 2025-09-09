@@ -187,7 +187,22 @@ class BlockchainServiceImpl implements BlockchainService {
     if (typeof window === "undefined") return null;
     const eth = (window as any).ethereum;
     if (!eth) return null;
-    return new ethers.BrowserProvider(eth);
+    
+    try {
+      // En producción, verificar que el provider esté disponible
+      if (process.env.NODE_ENV === 'production') {
+        // Verificar que el provider responda
+        if (typeof eth.request !== 'function') {
+          console.error('Provider no tiene método request');
+          return null;
+        }
+      }
+      
+      return new ethers.BrowserProvider(eth);
+    } catch (error) {
+      console.error('Error creando BrowserProvider:', error);
+      return null;
+    }
   }
 
   private async getSignerAndAddress(): Promise<{ signer: ethers.Signer; address: string | null; chainId: number } | null> {
@@ -394,12 +409,30 @@ class BlockchainServiceImpl implements BlockchainService {
         // Firmar y enviar transacción desde el navegador
         const browserProvider = this.getBrowserProvider()
         if (!browserProvider) {
-          return { success: false, error: "Provider de navegador no disponible" }
+          console.error('BrowserProvider no disponible:', {
+            hasWindow: typeof window !== 'undefined',
+            hasEthereum: !!(window as any).ethereum,
+            environment: process.env.NODE_ENV
+          });
+          return { success: false, error: "Provider de navegador no disponible. Verifica que MetaMask esté instalado y habilitado." }
         }
-        const { signer, chainId } = (await this.getSignerAndAddress()) || {}
-        if (!signer || !chainId) return { success: false, error: "No hay signer disponible" }
+        
+        const signerInfo = await this.getSignerAndAddress()
+        if (!signerInfo) {
+          console.error('No se pudo obtener signer:', {
+            hasProvider: !!browserProvider,
+            environment: process.env.NODE_ENV
+          });
+          return { success: false, error: "No se pudo obtener el signer. Verifica tu conexión a MetaMask." }
+        }
+        
+        const { signer, chainId } = signerInfo
         const addrInfo = this.getAddressesAndRpcByChainId(chainId)
-        if (!addrInfo) return { success: false, error: "Contrato no configurado para esta red" }
+        if (!addrInfo) {
+          console.error('Contrato no configurado para red:', chainId);
+          return { success: false, error: `Contrato no configurado para la red ${chainId}. Cambia a BASE Sepolia.` }
+        }
+        
         const contractWithSigner = new ethers.Contract(addrInfo.address, CONTRACT_ABI, signer)
 
         const tx = await contractWithSigner.createRaffle(
