@@ -10,7 +10,7 @@ export interface Prize {
   name: string;
   description: string;
   imageUrl: string;
-  value: number; // Valor en wei o unidades de token
+  value: bigint; // Valor en wei o unidades de token
 }
 
 export interface Raffle {

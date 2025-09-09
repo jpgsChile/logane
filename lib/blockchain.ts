@@ -276,7 +276,7 @@ class BlockchainServiceImpl implements BlockchainService {
         title: "Rifa iPhone 15 Pro",
         description: "Gana el último iPhone 15 Pro",
         prizeCount: 3,
-        ticketPrice: ethers.parseEther("0.01"),
+        ticketPrice: Number(ethers.parseEther("0.01")),
         maxParticipants: 100,
         endTime: Math.floor(Date.now() / 1000) + 86400, // 24 horas
         creator: "0x1234567890123456789012345678901234567890",
@@ -287,9 +287,9 @@ class BlockchainServiceImpl implements BlockchainService {
         createdAt: Math.floor(Date.now() / 1000) - 3600,
         paymentToken: PaymentToken.ETH,
         prizes: [
-          { name: "iPhone 15 Pro", description: "Último modelo", imageUrl: "", value: ethers.parseEther("0.5") },
-          { name: "AirPods Pro", description: "Auriculares inalámbricos", imageUrl: "", value: ethers.parseEther("0.2") },
-          { name: "Gift Card $100", description: "Tarjeta de regalo", imageUrl: "", value: ethers.parseEther("0.1") }
+          { name: "iPhone 15 Pro", description: "Último modelo", imageUrl: "", value: Number(ethers.parseEther("0.5")) },
+          { name: "AirPods Pro", description: "Auriculares inalámbricos", imageUrl: "", value: Number(ethers.parseEther("0.2")) },
+          { name: "Gift Card $100", description: "Tarjeta de regalo", imageUrl: "", value: Number(ethers.parseEther("0.1")) }
         ]
       },
       2: {
@@ -297,7 +297,7 @@ class BlockchainServiceImpl implements BlockchainService {
         title: "Rifa Gaming Setup",
         description: "Setup completo para gaming",
         prizeCount: 2,
-        ticketPrice: ethers.parseEther("0.02"),
+        ticketPrice: Number(ethers.parseEther("0.02")),
         maxParticipants: 50,
         endTime: Math.floor(Date.now() / 1000) + 172800, // 48 horas
         creator: "0x0987654321098765432109876543210987654321",
@@ -308,8 +308,8 @@ class BlockchainServiceImpl implements BlockchainService {
         createdAt: Math.floor(Date.now() / 1000) - 7200,
         paymentToken: PaymentToken.ETH,
         prizes: [
-          { name: "PC Gaming", description: "PC de alta gama", imageUrl: "", value: ethers.parseEther("1.0") },
-          { name: "Monitor 4K", description: "Monitor 4K 27 pulgadas", imageUrl: "", value: ethers.parseEther("0.3") }
+          { name: "PC Gaming", description: "PC de alta gama", imageUrl: "", value: Number(ethers.parseEther("1.0")) },
+          { name: "Monitor 4K", description: "Monitor 4K 27 pulgadas", imageUrl: "", value: Number(ethers.parseEther("0.3")) }
         ]
       }
     };
@@ -381,7 +381,7 @@ class BlockchainServiceImpl implements BlockchainService {
             description: p.description || "",
             imageUrl: p.imageUrl || "",
             // Convertir según el token de pago (ETH=18, USDC/USDT=6 decimales)
-            value: ethers.parseUnits(String(p.value || 0), SUPPORTED_TOKENS[data.paymentToken].decimals)
+            value: Number(ethers.parseUnits(String(p.value || 0), SUPPORTED_TOKENS[data.paymentToken].decimals))
           }
         })
 
@@ -389,7 +389,7 @@ class BlockchainServiceImpl implements BlockchainService {
         
         // Convertir precio según el token (ETH=18 decimales, USDC/USDT=6 decimales)
         const decimals = SUPPORTED_TOKENS[data.paymentToken].decimals
-        const ticketPriceWei = ethers.parseUnits(String(data.ticketPrice), decimals)
+        const ticketPriceWei = Number(ethers.parseUnits(String(data.ticketPrice), decimals))
 
         // Firmar y enviar transacción desde el navegador
         const browserProvider = this.getBrowserProvider()
