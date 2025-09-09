@@ -6,6 +6,7 @@ import type {
   BlockchainService,
   PaymentToken 
 } from "./types";
+import { SUPPORTED_TOKENS } from "./types";
 
 // Configuración de redes BASE (Testnet/Mainnet)
 const RPC_URL_SEPOLIA =
@@ -379,13 +380,16 @@ class BlockchainServiceImpl implements BlockchainService {
             name: p.name || "",
             description: p.description || "",
             imageUrl: p.imageUrl || "",
-            // Convertir a wei (ETH) por defecto para mantener consistencia
-            value: ethers.parseEther(String(p.value || 0))
+            // Convertir según el token de pago (ETH=18, USDC/USDT=6 decimales)
+            value: ethers.parseUnits(String(p.value || 0), SUPPORTED_TOKENS[data.paymentToken].decimals)
           }
         })
 
         const prizeCount = (data as any).prizeCount ?? Math.min(data.prizes.length, 9)
-        const ticketPriceWei = ethers.parseEther(String(data.ticketPrice))
+        
+        // Convertir precio según el token (ETH=18 decimales, USDC/USDT=6 decimales)
+        const decimals = SUPPORTED_TOKENS[data.paymentToken].decimals
+        const ticketPriceWei = ethers.parseUnits(String(data.ticketPrice), decimals)
 
         // Firmar y enviar transacción desde el navegador
         const browserProvider = this.getBrowserProvider()
@@ -455,10 +459,10 @@ class BlockchainServiceImpl implements BlockchainService {
         name: p.name,
         description: p.description || "",
         imageUrl: p.imageUrl || "",
-        value: Number(ethers.parseEther(String(p.value || 0)))
+        value: Number(ethers.parseUnits(String(p.value || 0), SUPPORTED_TOKENS[data.paymentToken].decimals))
       })).concat(Array.from({ length: Math.max(0, 9 - prizeCount) }, () => ({ name: "", description: "", imageUrl: "", value: 0 }))).slice(0, 9),
       prizeCount,
-      ticketPrice: Number(ethers.parseEther(String(data.ticketPrice))),
+      ticketPrice: Number(ethers.parseUnits(String(data.ticketPrice), SUPPORTED_TOKENS[data.paymentToken].decimals)),
       maxParticipants: Number(data.maxParticipants),
       endTime,
       creator: data.creator || "0x0000000000000000000000000000000000000000",

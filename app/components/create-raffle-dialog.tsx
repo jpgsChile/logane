@@ -25,7 +25,7 @@ const CreateRaffleDialog: React.FC<CreateRaffleDialogProps> = ({ onClose, onSucc
   const [ticketPrice, setTicketPrice] = useState(0)
   const [maxParticipants, setMaxParticipants] = useState("")
   const [duration, setDuration] = useState("")
-  const [paymentToken, setPaymentToken] = useState<PaymentToken>(PaymentToken.ETH)
+  const [paymentToken, setPaymentToken] = useState<PaymentToken>(PaymentToken.USDC)
   const [isCreating, setIsCreating] = useState(false)
 
   const {
@@ -344,7 +344,7 @@ const CreateRaffleDialog: React.FC<CreateRaffleDialogProps> = ({ onClose, onSucc
       {/* Configuración de la Rifa */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="ticketPrice">Precio por Ticket (ETH)</Label>
+          <Label htmlFor="ticketPrice">Precio por Ticket ({SUPPORTED_TOKENS[paymentToken].symbol})</Label>
           <input
             id="ticketPrice"
             type="number"
@@ -352,7 +352,7 @@ const CreateRaffleDialog: React.FC<CreateRaffleDialogProps> = ({ onClose, onSucc
             value={ticketPrice}
             onChange={(e) => setTicketPrice(Number.parseFloat(e.target.value) || 0)}
             className="w-full p-2 border rounded-md"
-            placeholder="0.01"
+            placeholder={paymentToken === PaymentToken.ETH ? "0.01" : "10"}
             required
           />
         </div>
