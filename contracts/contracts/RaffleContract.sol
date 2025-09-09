@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -95,9 +95,10 @@ contract RaffleContract is ReentrancyGuard, Ownable, Pausable {
     event TokenAddressUpdated(PaymentToken indexed token, address indexed tokenAddress); // 
     
 
-    constructor(address _feeRecipient) { // Se usa para validación de dirección inválida
-        feeRecipient = _feeRecipient;
-    }
+    // Se usa para validación de dirección inválida
+    constructor(address _feeRecipient, address _initialOwner) Ownable(_initialOwner) {
+    feeRecipient = _feeRecipient;
+}
 
     // configura dirección para el token de pago    
     function setTokenAddress(PaymentToken _token, address _tokenAddress) external onlyOwner {
