@@ -24,7 +24,7 @@ export default function NetworkConfig({ onNetworkConfigured }: NetworkConfigProp
   }
 
   const addBaseSepoliaNetwork = async () => {
-    if (typeof window === 'undefined' || !window.ethereum) {
+    if (typeof window === 'undefined' || !(window as any).ethereum) {
       setError('MetaMask no está instalado')
       return
     }
@@ -34,7 +34,7 @@ export default function NetworkConfig({ onNetworkConfigured }: NetworkConfigProp
 
     try {
       // Intentar agregar la red
-      await window.ethereum.request({
+      await (window as any).ethereum.request({
         method: 'wallet_addEthereumChain',
         params: [BASE_SEPOLIA_CONFIG],
       })
@@ -44,7 +44,7 @@ export default function NetworkConfig({ onNetworkConfigured }: NetworkConfigProp
       if (err.code === 4902) {
         // Red ya existe, intentar cambiar a ella
         try {
-          await window.ethereum.request({
+          await (window as any).ethereum.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: BASE_SEPOLIA_CONFIG.chainId }],
           })
@@ -61,13 +61,13 @@ export default function NetworkConfig({ onNetworkConfigured }: NetworkConfigProp
   }
 
   const checkNetwork = async () => {
-    if (typeof window === 'undefined' || !window.ethereum) {
+    if (typeof window === 'undefined' || !(window as any).ethereum) {
       setError('MetaMask no está instalado')
       return
     }
 
     try {
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' })
+      const chainId = await (window as any).ethereum.request({ method: 'eth_chainId' })
       if (chainId === BASE_SEPOLIA_CONFIG.chainId) {
         onNetworkConfigured?.()
       } else {
