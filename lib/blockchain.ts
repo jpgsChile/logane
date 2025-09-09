@@ -3,9 +3,9 @@ import { ethers } from "ethers";
 import type { 
   Raffle, 
   CreateRaffleRequest, 
-  BlockchainService,
-  PaymentToken 
+  BlockchainService
 } from "./types";
+import { PaymentToken } from "./types";
 import { SUPPORTED_TOKENS } from "./types";
 
 // Configuración de redes BASE (Testnet/Mainnet)
