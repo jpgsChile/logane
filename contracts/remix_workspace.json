@@ -1,0 +1,135 @@
+{
+  "name": "Logane Raffle V2",
+  "description": "Smart contracts for Logane Raffle Platform V2 with viaIR optimization",
+  "version": "2.0.0",
+  "author": "Pablo Guzmán Sánchez",
+  "license": "MIT",
+  "compiler": {
+    "version": "0.8.20",
+    "settings": {
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "viaIR": true,
+      "evmVersion": "shanghai",
+      "libraries": {},
+      "outputSelection": {
+        "*": {
+          "*": [
+            "evm.bytecode.object",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.sourceMap",
+            "evm.gasEstimates",
+            "abi"
+          ]
+        }
+      }
+    }
+  },
+  "networks": {
+    "ethereum": {
+      "mainnet": {
+        "url": "https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+        "accounts": ["${PRIVATE_KEY}"]
+      },
+      "sepolia": {
+        "url": "https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+        "accounts": ["${PRIVATE_KEY}"]
+      }
+    },
+    "polygon": {
+      "mainnet": {
+        "url": "https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+        "accounts": ["${PRIVATE_KEY}"]
+      },
+      "mumbai": {
+        "url": "https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+        "accounts": ["${PRIVATE_KEY}"]
+      }
+    },
+    "arbitrum": {
+      "mainnet": {
+        "url": "https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+        "accounts": ["${PRIVATE_KEY}"]
+      },
+      "sepolia": {
+        "url": "https://arb-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+        "accounts": ["${PRIVATE_KEY}"]
+      }
+    },
+    "optimism": {
+      "mainnet": {
+        "url": "https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+        "accounts": ["${PRIVATE_KEY}"]
+      },
+      "sepolia": {
+        "url": "https://opt-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+        "accounts": ["${PRIVATE_KEY}"]
+      }
+    },
+    "base": {
+      "mainnet": {
+        "url": "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+        "accounts": ["${PRIVATE_KEY}"]
+      },
+      "sepolia": {
+        "url": "https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+        "accounts": ["${PRIVATE_KEY}"]
+      }
+    }
+  },
+  "etherscan": {
+    "ethereum": {
+      "mainnet": {
+        "url": "https://api.etherscan.io/api",
+        "apiKey": "${ETHERSCAN_API_KEY}"
+      },
+      "sepolia": {
+        "url": "https://api-sepolia.etherscan.io/api",
+        "apiKey": "${ETHERSCAN_API_KEY}"
+      }
+    },
+    "polygon": {
+      "mainnet": {
+        "url": "https://api.polygonscan.com/api",
+        "apiKey": "${POLYGONSCAN_API_KEY}"
+      },
+      "mumbai": {
+        "url": "https://api-testnet.polygonscan.com/api",
+        "apiKey": "${POLYGONSCAN_API_KEY}"
+      }
+    },
+    "arbitrum": {
+      "mainnet": {
+        "url": "https://api.arbiscan.io/api",
+        "apiKey": "${ARBISCAN_API_KEY}"
+      },
+      "sepolia": {
+        "url": "https://api-sepolia.arbiscan.io/api",
+        "apiKey": "${ARBISCAN_API_KEY}"
+      }
+    },
+    "optimism": {
+      "mainnet": {
+        "url": "https://api-optimistic.etherscan.io/api",
+        "apiKey": "${OPTIMISTIC_ETHERSCAN_API_KEY}"
+      },
+      "sepolia": {
+        "url": "https://api-sepolia-optimistic.etherscan.io/api",
+        "apiKey": "${OPTIMISTIC_ETHERSCAN_API_KEY}"
+      }
+    },
+    "base": {
+      "mainnet": {
+        "url": "https://api.basescan.org/api",
+        "apiKey": "${BASESCAN_API_KEY}"
+      },
+      "sepolia": {
+        "url": "https://api-sepolia.basescan.org/api",
+        "apiKey": "${BASESCAN_API_KEY}"
+      }
+    }
+  }
+}

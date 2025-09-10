@@ -1,0 +1,55 @@
+{
+  "name": "logane-raffle-contracts-v2",
+  "version": "2.0.0",
+  "description": "Smart contracts for Logane Raffle Platform V2",
+  "main": "index.js",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "test:verbose": "forge test -vvv",
+    "test:gas": "forge test --gas-report",
+    "coverage": "forge coverage",
+    "deploy:sepolia": "forge script scripts/DeployRaffleV2.s.sol --rpc-url sepolia --broadcast --verify",
+    "deploy:mainnet": "forge script scripts/DeployRaffleV2.s.sol --rpc-url mainnet --broadcast --verify",
+    "deploy:polygon": "forge script scripts/DeployRaffleV2.s.sol --rpc-url polygon --broadcast --verify",
+    "deploy:arbitrum": "forge script scripts/DeployRaffleV2.s.sol --rpc-url arbitrum --broadcast --verify",
+    "deploy:optimism": "forge script scripts/DeployRaffleV2.s.sol --rpc-url optimism --broadcast --verify",
+    "deploy:base": "forge script scripts/DeployRaffleV2.s.sol --rpc-url base --broadcast --verify",
+    "lint": "forge fmt",
+    "lint:check": "forge fmt --check",
+    "clean": "forge clean",
+    "install": "forge install",
+    "update": "forge update",
+    "remappings": "forge remappings > remappings.txt",
+    "size": "forge build --sizes",
+    "storage": "forge inspect RaffleContractV2 storage-layout",
+    "abi": "forge inspect RaffleContractV2 abi",
+    "bytecode": "forge inspect RaffleContractV2 bytecode"
+  },
+  "keywords": [
+    "solidity",
+    "smart-contracts",
+    "raffle",
+    "lottery",
+    "defi",
+    "ethereum",
+    "blockchain"
+  ],
+  "author": "Logane Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@openzeppelin/contracts": "^4.9.3",
+    "forge-std": "^1.5.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/logane/contracts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/logane/contracts/issues"
+  },
+  "homepage": "https://github.com/logane/contracts#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
