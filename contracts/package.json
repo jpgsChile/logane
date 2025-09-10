@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "logane-raffle-contracts-v2",
   "version": "2.0.0",
   "description": "Smart contracts for Logane Raffle Platform V2",
@@ -51,5 +52,24 @@
   "homepage": "https://github.com/logane/contracts#readme",
   "engines": {
     "node": ">=16.0.0"
+=======
+  "name": "logane-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for Logane decentralized raffle system",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:localhost": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:testnet": "hardhat run scripts/deploy.js --network sepolia",
+    "verify": "hardhat verify"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.3"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "hardhat": "^2.19.0"
+>>>>>>> fc87708d129b2a86fafcf3bdc629bcea1ebb78e8
   }
 }

@@ -1,0 +1,32 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="96" cy="96" r="86" fill="url(#gradient)" stroke="#fff" stroke-width="4"/>
+  
+  <!-- Trophy Icon -->
+  <g transform="translate(96, 96)">
+    <!-- Trophy Base -->
+    <rect x="-16" y="32" width="32" height="8" rx="4" fill="#fff"/>
+    
+    <!-- Trophy Body -->
+    <rect x="-12" y="-16" width="24" height="48" rx="12" fill="#fff"/>
+    
+    <!-- Trophy Handles -->
+    <path d="M -24 -8 Q -32 -16 -24 -24 Q -16 -16 -24 -8" stroke="#fff" stroke-width="3" fill="none"/>
+    <path d="M 24 -8 Q 32 -16 24 -24 Q 16 -16 24 -8" stroke="#fff" stroke-width="3" fill="none"/>
+    
+    <!-- Trophy Top -->
+    <rect x="-8" y="-24" width="16" height="8" rx="4" fill="#fff"/>
+    
+    <!-- Star on Trophy -->
+    <g transform="translate(0, -8)">
+      <path d="M 0 -6 L 1.5 -3 L 6 -3 L 3 1.5 L 6 6 L 0 3 L -6 6 L -3 1.5 L -6 -3 L -1.5 -3 Z" fill="#667eea"/>
+    </g>
+  </g>
+</svg>
